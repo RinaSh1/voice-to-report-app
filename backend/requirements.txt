@@ -2,5 +2,7 @@ fastapi
 uvicorn[standard]
 anthropic
 pydantic
+spacy
+dateparser
 pytest
 httpx
