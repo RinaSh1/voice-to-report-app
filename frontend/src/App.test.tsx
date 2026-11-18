@@ -87,3 +87,41 @@ describe('App generate report', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not reach Claude.')
   })
 })
+
+describe('App save and list', () => {
+  beforeEach(installFakeSpeech)
+
+  const SAVED = { id: 7, created_at: '2026-11-18T09:30:00Z', transcript: 'old note', report: { ...REPORT, issue: 'Old crack' } }
+
+  it('shows an empty state when nothing is saved', async () => {
+    render(<App />)
+    expect(await screen.findByText(/No reports yet/)).toBeInTheDocument()
+  })
+
+  it('lists saved reports from the backend', async () => {
+    fakeBackend({ '/api/reports': () => Response.json([SAVED]) })
+    render(<App />)
+    expect(await screen.findByText('Old crack')).toBeInTheDocument()
+  })
+
+  it('saves the generated report and puts it at the top of the list', async () => {
+    const fetchMock = fakeBackend({
+      '/api/reports/generate': () => Response.json(REPORT),
+      '/api/reports': (init) =>
+        init?.method === 'POST'
+          ? Response.json({ ...SAVED, id: 8, report: REPORT }, { status: 201 })
+          : Response.json([SAVED]),
+    })
+    render(<App />)
+    await userEvent.type(screen.getByLabelText('Transcript'), 'Socket in room 12 broken')
+    await userEvent.click(screen.getByRole('button', { name: 'Generate report' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('button', { name: 'Saved ✓' })).toBeDisabled()
+    const post = fetchMock.mock.calls.find(([url, init]) => url === '/api/reports' && init?.method === 'POST')!
+    expect(JSON.parse(post[1]!.body as string).transcript).toBe('Socket in room 12 broken')
+    const rows = screen.getAllByRole('listitem')
+    expect(rows[0]).toHaveTextContent('Broken socket')
+    expect(rows[1]).toHaveTextContent('Old crack')
+  })
+})

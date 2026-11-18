@@ -15,3 +15,10 @@ export type Report = {
   language: Language
   missing_fields: string[]
 }
+
+export type ReportItem = {
+  id: number
+  created_at: string // ISO date-time
+  transcript: string
+  report: Report
+}

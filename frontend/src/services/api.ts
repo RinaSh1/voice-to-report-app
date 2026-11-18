@@ -1,6 +1,6 @@
 // All calls from the frontend to the FastAPI backend live here.
 
-import type { Language, Report } from '../types/report'
+import type { Language, Report, ReportItem } from '../types/report'
 
 export type Health = {
   status: string
@@ -30,6 +30,22 @@ export async function generateReport(transcript: string, language: Language): Pr
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ transcript, language }),
   })
+  if (!response.ok) throw await readError(response)
+  return response.json()
+}
+
+export async function saveReport(transcript: string, report: Report): Promise<ReportItem> {
+  const response = await fetch('/api/reports', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript, report }),
+  })
+  if (!response.ok) throw await readError(response)
+  return response.json()
+}
+
+export async function listReports(): Promise<ReportItem[]> {
+  const response = await fetch('/api/reports')
   if (!response.ok) throw await readError(response)
   return response.json()
 }

@@ -2,11 +2,15 @@ import { vi } from 'vitest'
 
 type Handler = (init?: RequestInit) => Response | Promise<Response>
 
-/** Fake the backend: map a URL to an answer. The health check always answers "ok". */
+const DEFAULTS: Record<string, Handler> = {
+  '/api/health': () => Response.json({ status: 'ok', llm_provider: 'claude' }),
+  '/api/reports': () => Response.json([]), // no saved reports yet
+}
+
+/** Fake the backend: map a URL to an answer. Health and an empty report list work by default. */
 export function fakeBackend(routes: Record<string, Handler> = {}) {
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-    if (url === '/api/health') return Response.json({ status: 'ok', llm_provider: 'claude' })
-    const handler = routes[url]
+    const handler = routes[url] ?? DEFAULTS[url]
     if (!handler) throw new Error(`No fake for ${url}`)
     return handler(init)
   })
