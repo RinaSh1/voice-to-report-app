@@ -1,0 +1,4 @@
+# Development and CI: runtime + test and lint tools
+-r requirements.txt
+pytest==9.2.0
+ruff==0.17.5

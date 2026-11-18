@@ -1,0 +1,20 @@
+[project]
+name = "voice-to-report-api"
+version = "1.0.0"
+description = "Turns a spoken site note into a validated, structured report."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["B008"]  # FastAPI uses Depends() in default arguments by design
+
+[tool.ruff.lint.per-file-ignores]
+"app/services/report_service.py" = ["E501"]  # prompt text is kept verbatim
