@@ -6,6 +6,8 @@ A construction worker **speaks** a short site note, in English or German. The ap
 
 Anything the worker didn't say stays empty and is flagged as **Missing**. The app never guesses.
 
+**▶ Live demo: [voice-to-report.onrender.com](https://voice-to-report.onrender.com)** (use Chrome and allow the microphone, or type a note). It runs on Render's free plan, so the first report after a quiet period can take about a minute while the server wakes up. Saved reports reset when the server restarts.
+
 <img src="docs/screenshot.jpg" alt="Voice to Report: a German voice note turned into an English report card with location, due date, trade and a 'Missing: priority' warning" width="420">
 
 > 🎥 Demo video: *coming soon*
@@ -86,6 +88,7 @@ A guessed value where the worker said nothing counts as **wrong**. Remaining mis
 - **Backend:** Python, FastAPI, Pydantic, spaCy (`en_core_web_sm`, `de_core_news_sm`), dateparser, SQLite
 - **LLM:** Claude Haiku 5.5 with structured outputs (default), or Ollama (free, local) via `LLM_PROVIDER=ollama`
 - **CI:** GitHub Actions runs ESLint, Vitest, the build and pytest on every push
+- **Hosting:** Render (`render.yaml`), with the FastAPI web service and the React static site; `/api/*` is proxied to the backend. The public demo is rate-limited (20 reports per hour per visitor, 200 per day) to protect the API credit.
 
 The LLM sits behind a small interface (`llm/base.py`), so providers can be swapped without touching the rest of the app. All tests use a fake LLM: no API key and no cost.
 
