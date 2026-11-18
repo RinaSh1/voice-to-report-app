@@ -25,7 +25,7 @@ declare global {
   }
 }
 
-export type Language = 'en-US' | 'de-DE'
+export type SpeechLanguage = 'en-US' | 'de-DE'
 
 /** Turn the browser's error codes into messages a worker understands. */
 export function errorMessage(code: string): string {
@@ -58,7 +58,7 @@ function join(a: string, b: string): string {
  * - `transcript`: the finished text (the user may also edit it).
  * - `interim`: words still being recognised, shown greyed out while speaking.
  */
-export function useSpeechRecognition(lang: Language) {
+export function useSpeechRecognition(lang: SpeechLanguage) {
   const supported = getConstructor() !== undefined
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   const [listening, setListening] = useState(false)

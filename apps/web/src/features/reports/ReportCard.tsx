@@ -1,23 +1,14 @@
 import type { ReactNode } from 'react'
 
-import type { Priority, Report } from '../types/report'
-import { formatDate } from '../utils/formatDate'
+import { formatDate } from '../../lib/formatDate'
+import { PriorityBadge } from './PriorityBadge'
+import type { Report } from './types'
 
 const FIELD_LABELS: Record<string, string> = {
   location: 'location',
   priority: 'priority',
   due_date: 'due date',
   assigned_trade: 'trade',
-}
-
-export function PriorityBadge({ priority }: { priority: Priority | null }) {
-  const level = priority?.toLowerCase() ?? 'none'
-  return (
-    <span className={`badge badge--${level}`}>
-      <span className="dot" aria-hidden="true" />
-      {priority ? `${priority} priority` : 'No priority'}
-    </span>
-  )
 }
 
 type Props = {

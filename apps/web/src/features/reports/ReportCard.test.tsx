@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import type { Report } from '../types/report'
-import { formatDate } from '../utils/formatDate'
+import { formatDate } from '../../lib/formatDate'
 import { ReportCard } from './ReportCard'
+import type { Report } from './types'
 
 const REPORT: Report = {
   location: '2nd floor, room 3',

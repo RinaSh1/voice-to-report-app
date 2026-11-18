@@ -1,4 +1,4 @@
-// Same shape as the Report model in backend/app/models.py.
+// Same shape as the Report model in apps/api/app/schemas/report.py.
 
 export type Priority = 'High' | 'Medium' | 'Low'
 export type Category = 'Damage' | 'Safety' | 'Material' | 'Task' | 'Other'

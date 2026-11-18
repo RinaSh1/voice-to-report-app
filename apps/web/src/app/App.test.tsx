@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { fakeApi } from '../test/fakeFetch'
+import { installFakeSpeech, removeSpeech } from '../test/fakeSpeech'
 import App from './App'
-import { fakeBackend } from './test/fakeFetch'
-import { installFakeSpeech, removeSpeech } from './test/fakeSpeech'
 
 const REPORT = {
   location: 'Room 12',
@@ -19,7 +19,7 @@ const REPORT = {
 }
 
 beforeEach(() => {
-  fakeBackend()
+  fakeApi()
 })
 
 afterEach(() => {
@@ -58,7 +58,7 @@ describe('App generate report', () => {
 
   it('sends the transcript and language, then shows the report card', async () => {
     let resolve!: (response: Response) => void
-    const fetchMock = fakeBackend({
+    const fetchMock = fakeApi({
       '/api/reports/generate': () => new Promise<Response>((r) => (resolve = r)),
     })
     render(<App />)
@@ -76,8 +76,8 @@ describe('App generate report', () => {
     expect(screen.getByText(/Missing: priority, due date, trade/)).toBeInTheDocument()
   })
 
-  it("shows the backend's error message", async () => {
-    fakeBackend({
+  it("shows the API's error message", async () => {
+    fakeApi({
       '/api/reports/generate': () => Response.json({ detail: 'Could not reach Claude.' }, { status: 502 }),
     })
     render(<App />)
@@ -98,14 +98,14 @@ describe('App save and list', () => {
     expect(await screen.findByText(/No reports yet/)).toBeInTheDocument()
   })
 
-  it('lists saved reports from the backend', async () => {
-    fakeBackend({ '/api/reports': () => Response.json([SAVED]) })
+  it('lists saved reports from the API', async () => {
+    fakeApi({ '/api/reports': () => Response.json([SAVED]) })
     render(<App />)
     expect(await screen.findByText('Old crack')).toBeInTheDocument()
   })
 
   it('saves the generated report and puts it at the top of the list', async () => {
-    const fetchMock = fakeBackend({
+    const fetchMock = fakeApi({
       '/api/reports/generate': () => Response.json(REPORT),
       '/api/reports': (init) =>
         init?.method === 'POST'

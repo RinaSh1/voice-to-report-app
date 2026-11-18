@@ -1,5 +1,5 @@
-import type { ReportItem } from '../types/report'
-import { PriorityBadge } from './ReportCard'
+import { PriorityBadge } from './PriorityBadge'
+import type { ReportItem } from './types'
 
 type Props = {
   items: ReportItem[]

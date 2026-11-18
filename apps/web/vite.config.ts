@@ -6,11 +6,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    // In development, send /api/... calls to the FastAPI backend.
+    // In development, send /api/... calls to the local API.
     proxy: { '/api': 'http://localhost:8000' },
   },
   test: {
     environment: 'jsdom',
-    setupFiles: './src/setupTests.ts',
+    setupFiles: './src/test/setup.ts',
   },
 })

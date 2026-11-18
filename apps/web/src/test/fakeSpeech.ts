@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 
-import type { SpeechRecognitionLike } from '../hooks/useSpeechRecognition'
+import type { SpeechRecognitionLike } from '../features/recording/useSpeechRecognition'
 
 /** A fake browser speech recogniser, so tests can "speak" without a microphone. */
 export class FakeRecognition implements SpeechRecognitionLike {
