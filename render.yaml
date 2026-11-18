@@ -1,4 +1,4 @@
-# Render Blueprint: the FastAPI backend as a free web service.
+# Render Blueprint: the FastAPI backend and the React frontend, both free.
 # Render reads this file when you choose "New > Blueprint" and pick this repo.
 services:
   - type: web
@@ -25,3 +25,20 @@ services:
       # You type the key into Render's dashboard yourself. It is never stored in this repo.
       - key: ANTHROPIC_API_KEY
         sync: false
+
+  # The React page, served as a free static site. Calls to /api/... are passed on
+  # to the backend above, so the browser only ever talks to one address.
+  - type: web
+    name: voice-to-report
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20.20.0"
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://voice-to-report-api.onrender.com/api/*
