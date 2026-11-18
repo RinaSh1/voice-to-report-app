@@ -1,0 +1,27 @@
+# Render Blueprint: the FastAPI backend as a free web service.
+# Render reads this file when you choose "New > Blueprint" and pick this repo.
+services:
+  - type: web
+    name: voice-to-report-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python -m spacy download en_core_web_sm &&
+      python -m spacy download de_core_news_sm
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.14.0"
+      - key: LLM_PROVIDER
+        value: claude
+      - key: RATE_LIMIT_PER_HOUR
+        value: "20"
+      - key: RATE_LIMIT_PER_DAY
+        value: "200"
+      # You type the key into Render's dashboard yourself. It is never stored in this repo.
+      - key: ANTHROPIC_API_KEY
+        sync: false

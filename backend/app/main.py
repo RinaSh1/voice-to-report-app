@@ -12,6 +12,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from app.db import ReportStore, get_store
 from app.llm import LLMError, LLMProvider, get_provider
 from app.models import GenerateRequest, Report, ReportCreate, ReportItem
+from app.rate_limit import limit_usage
 from app.report_service import ReportError, generate_report
 
 # In development the React app (Vite) forwards /api/... calls here, so no CORS setup is needed.
@@ -24,7 +25,7 @@ def health() -> dict:
     return {"status": "ok", "llm_provider": os.getenv("LLM_PROVIDER", "claude")}
 
 
-@app.post("/api/reports/generate")
+@app.post("/api/reports/generate", dependencies=[Depends(limit_usage)])
 def generate(request: GenerateRequest, provider: LLMProvider = Depends(get_provider)) -> Report:
     """Turn a transcript into a structured report (not saved yet)."""
     try:
