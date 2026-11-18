@@ -1,0 +1,56 @@
+{
+  "today": "2026-11-18",
+  "about": "10 sample site notes with the fields we expect. Text fields use keywords (all must appear, case-insensitive; a|b = either); null means the worker did not say it.",
+  "samples": [
+    {
+      "transcript": "Room 3 on the second floor, there's a crack in the wall next to the window. Needs to be fixed by Friday, high priority. Tell the plasterer.",
+      "language": "en",
+      "expected": {"location": ["3", "second|2nd"], "issue": ["crack", "wall"], "category": "Damage", "priority": "High", "due_date": "2026-11-20", "assigned_trade": ["plaster"]}
+    },
+    {
+      "transcript": "The socket in room 12 is broken, we need new ones.",
+      "language": "en",
+      "expected": {"location": ["12"], "issue": ["socket"], "category": "Damage", "priority": null, "due_date": null, "assigned_trade": null}
+    },
+    {
+      "transcript": "Please order 20 bags of cement for Friday.",
+      "language": "en",
+      "expected": {"location": null, "issue": ["cement"], "category": "Material", "priority": null, "due_date": "2026-11-20", "assigned_trade": null}
+    },
+    {
+      "transcript": "Um, there's water leaking from the ceiling in the basement. It's urgent, the plumber needs to come today.",
+      "language": "en",
+      "expected": {"location": ["basement"], "issue": ["leak"], "category": "Damage", "priority": "High", "due_date": "2026-11-18", "assigned_trade": ["plumber"]}
+    },
+    {
+      "transcript": "The scaffolding on the north side is loose. Nobody should go up there until it's fixed.",
+      "language": "en",
+      "expected": {"location": ["north"], "issue": ["scaffold"], "category": "Safety", "priority": null, "due_date": null, "assigned_trade": null}
+    },
+    {
+      "transcript": "Paint the hallway on the third floor tomorrow, low priority, the painter can do it.",
+      "language": "en",
+      "expected": {"location": ["hall", "third|3rd"], "issue": ["paint"], "category": "Task", "priority": "Low", "due_date": "2026-11-19", "assigned_trade": ["painter"]}
+    },
+    {
+      "transcript": "Im Raum 12 ist die Steckdose kaputt, bitte bis morgen reparieren. Der Elektriker soll kommen.",
+      "language": "de",
+      "expected": {"location": ["12"], "issue": ["socket"], "category": "Damage", "priority": null, "due_date": "2026-11-19", "assigned_trade": ["electric"]}
+    },
+    {
+      "transcript": "Bitte 50 Säcke Zement für Freitag bestellen.",
+      "language": "de",
+      "expected": {"location": null, "issue": ["cement"], "category": "Material", "priority": null, "due_date": "2026-11-20", "assigned_trade": null}
+    },
+    {
+      "transcript": "Im zweiten Stock fehlt das Geländer an der Treppe. Das ist gefährlich, dringend!",
+      "language": "de",
+      "expected": {"location": ["second|2nd"], "issue": ["rail"], "category": "Safety", "priority": "High", "due_date": null, "assigned_trade": null}
+    },
+    {
+      "transcript": "Die Fliesen im Bad von Wohnung 4 sind gerissen. Der Fliesenleger soll das nächste Woche anschauen, mittlere Priorität.",
+      "language": "de",
+      "expected": {"location": ["4"], "issue": ["tile"], "category": "Damage", "priority": "Medium", "due_date": null, "assigned_trade": ["tile"]}
+    }
+  ]
+}
