@@ -7,6 +7,7 @@
   --accent: #e8590c;
   --ok: #2b8a3e;
   --error: #c92a2a;
+  --warn: #d9480f;
   --radius: 16px;
 
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -26,6 +27,7 @@
     --border: #353230;
     --ok: #51cf66;
     --error: #ff6b6b;
+    --warn: #ffa94d;
   }
 }
 
@@ -253,3 +255,115 @@ code {
   border-radius: 6px;
   background: var(--border);
 }
+
+/* Main action button */
+.primary {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 20px;
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--text);
+  cursor: pointer;
+}
+
+.primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.primary:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.section {
+  margin-top: 24px;
+}
+
+/* Report card */
+.card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.card__top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.card__location {
+  font-weight: 600;
+}
+
+.card__issue {
+  margin: 14px 0 4px;
+  font-size: 1.3rem;
+  line-height: 1.3;
+}
+
+.card__summary {
+  margin: 0;
+  color: var(--muted);
+}
+
+.card__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 18px 0 0;
+}
+
+.card__facts dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.card__facts dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+
+.card__missing {
+  margin: 18px 0 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+
+.card__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+/* Priority badge: always text + colour */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid currentColor;
+}
+
+.badge--high { color: var(--error); }
+.badge--medium { color: var(--warn); }
+.badge--low { color: var(--ok); }
+.badge--none { color: var(--muted); }

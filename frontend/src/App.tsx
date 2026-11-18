@@ -2,8 +2,11 @@ import { useState } from 'react'
 
 import { HealthStatus } from './components/HealthStatus'
 import { RecordButton } from './components/RecordButton'
+import { ReportCard } from './components/ReportCard'
 import { TranscriptView } from './components/TranscriptView'
 import { useSpeechRecognition, type Language } from './hooks/useSpeechRecognition'
+import { generateReport } from './services/api'
+import type { Report } from './types/report'
 
 const LANGUAGES: { code: Language; label: string }[] = [
   { code: 'en-US', label: 'English' },
@@ -13,6 +16,23 @@ const LANGUAGES: { code: Language; label: string }[] = [
 function App() {
   const [lang, setLang] = useState<Language>('en-US')
   const speech = useSpeechRecognition(lang)
+  const [report, setReport] = useState<Report | null>(null)
+  const [generating, setGenerating] = useState(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
+
+  const canGenerate = speech.transcript.trim() !== '' && !speech.listening && !generating
+
+  async function handleGenerate() {
+    setGenerating(true)
+    setGenerateError(null)
+    try {
+      setReport(await generateReport(speech.transcript, lang === 'de-DE' ? 'de' : 'en'))
+    } catch (error) {
+      setGenerateError(error instanceof Error ? error.message : 'Something went wrong.')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   return (
     <div className="app">
@@ -61,7 +81,23 @@ function App() {
           listening={speech.listening}
           onChange={speech.setTranscript}
         />
+
+        <button type="button" className="primary" disabled={!canGenerate} onClick={handleGenerate}>
+          {generating ? 'Generating report…' : 'Generate report'}
+        </button>
+
+        {generateError && (
+          <p className="notice" role="alert">
+            {generateError}
+          </p>
+        )}
       </main>
+
+      {report && (
+        <section className="section" aria-live="polite">
+          <ReportCard report={report} />
+        </section>
+      )}
     </div>
   )
 }
