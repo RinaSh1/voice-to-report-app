@@ -1,11 +1,11 @@
-# Render Blueprint: the FastAPI backend and the React frontend, both free.
+# Render Blueprint: the API (FastAPI) and the web app (React), both on the free plan.
 # Render reads this file when you choose "New > Blueprint" and pick this repo.
 services:
   - type: web
     name: voice-to-report-api
     runtime: python
     plan: free
-    rootDir: backend
+    rootDir: apps/api
     buildCommand: >-
       pip install -r requirements.txt &&
       python -m spacy download en_core_web_sm &&
@@ -27,11 +27,11 @@ services:
         sync: false
 
   # The React page, served as a free static site. Calls to /api/... are passed on
-  # to the backend above, so the browser only ever talks to one address.
+  # to the API above, so the browser only ever talks to one address.
   - type: web
     name: voice-to-report
     runtime: static
-    rootDir: frontend
+    rootDir: apps/web
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     autoDeploy: true

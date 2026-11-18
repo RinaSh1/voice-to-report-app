@@ -26,7 +26,7 @@ Scope rule: **small and finished beats big and half-done.**
 ## 2. Features (v1)
 1. **Record:** big microphone button; live transcript appears while speaking (Web Speech API).
 2. **Edit transcript:** the user can correct the text before generating the report.
-3. **Generate report:** backend turns the transcript into the structured JSON above.
+3. **Generate report:** the API turns the transcript into the structured JSON above.
 4. **Report card:** shows the fields clearly, with a coloured priority badge (High = red, Medium = orange, Low = green).
 5. **Save and list:** reports are stored in SQLite and shown in a list (newest first).
 6. **Languages:** works with English and German input (the output fields stay in English).
@@ -34,7 +34,7 @@ Scope rule: **small and finished beats big and half-done.**
 ### Out of scope (v1)
 Login, photos, PDF export, multiple users, mobile app.
 
-## 3. NLP pipeline (backend)
+## 3. NLP pipeline (API)
 1. **Clean** the transcript (trim, normalise spaces).
 2. **spaCy pre-processing** (`nlp.py`): extract dates, numbers and locations as hints (classic NLP before the LLM).
 3. **Relative dates:** convert words like "Friday" or "tomorrow" into real dates (e.g. with `dateparser`), based on today's date.
@@ -57,7 +57,7 @@ This shows clean design (interface + interchangeable implementations).
 | GET | `/api/reports` | List saved reports |
 | GET | `/api/health` | Health check (shows which LLM provider is active) |
 
-## 6. Frontend
+## 6. Web app
 One screen:
 ```
 ┌─────────────────────────────────────────────┐
@@ -86,21 +86,21 @@ Design decisions (2026-11-18):
 - Priority badge always shows **text + colour** (not colour alone), so it works for colour-blind users.
 
 ## 7. Testing
-- **Backend (pytest):** date conversion, spaCy hints, JSON validation + retry, API routes (LLM mocked).
-- **Frontend (Vitest):** ReportCard shows the right priority colour; the generate button is disabled while the transcript is empty.
-- **Example set:** 10 sample transcripts in `backend/tests/samples.json` with expected fields, to measure how accurate the pipeline is (a simple evaluation, a real AI engineering practice).
+- **API (pytest):** date conversion, spaCy hints, JSON validation + retry, API routes (LLM mocked).
+- **Web app (Vitest):** ReportCard shows the right priority colour; the generate button is disabled while the transcript is empty.
+- **Example set:** 10 sample transcripts in `apps/api/eval/samples.json` with expected fields, to measure how accurate the pipeline is (a simple evaluation, a real AI engineering practice).
 
 ## 8. Build plan (one step at a time, test + commit after each)
-1. Project skeleton: frontend (Vite React TS) + backend (FastAPI) + health check
-2. Frontend: record button + live transcript (Web Speech API)
-3. Backend: Pydantic models + spaCy hints + date conversion + tests
-4. Backend: LLM interface + Ollama provider + `/generate` endpoint + tests (mocked)
-5. Frontend: connect generate → show ReportCard
+1. Project skeleton: web app (Vite React TS) + API (FastAPI) + health check
+2. Web app: record button + live transcript (Web Speech API)
+3. API: Pydantic models + spaCy hints + date conversion + tests
+4. API: LLM interface + Ollama provider + `/generate` endpoint + tests (mocked)
+5. Web app: connect generate → show ReportCard
 6. Save/list reports with SQLite
 7. Evaluation script with the 10 sample transcripts (print accuracy per field)
 8. GitHub Actions CI (pytest + Vitest + build)
 9. README with a demo GIF/video, architecture diagram, and "what I learned"
-10. Optional: deploy (frontend on Vercel; backend only if free hosting works)
+10. Deploy: API and web app on Render (free plan)
 
 ## 9. Definition of done
 - I can speak a note in the browser and get a correct, structured report in a few seconds.

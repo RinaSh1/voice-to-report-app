@@ -10,37 +10,7 @@ Anything the worker didn't say stays empty and is flagged as **Missing**. The ap
 
 <img src="docs/screenshot.jpg" alt="Voice to Report: a German voice note turned into an English report card with location, due date, trade and a 'Missing: priority' warning" width="420">
 
-> 🎥 Demo video: *coming soon*
-
-## How it works
-
-```mermaid
-flowchart LR
-    A[🎤 Worker speaks] --> B[Web Speech API<br/>live transcript]
-    B --> C[Worker corrects<br/>the text]
-    C --> D1
-    subgraph D[FastAPI backend]
-        direction TB
-        D1[clean text] --> D2[spaCy hints<br/>places · numbers · dates]
-        D2 --> D3[dateparser<br/>'Friday' → 2026-11-20]
-        D3 --> D4[Claude Haiku<br/>JSON schema output]
-        D4 --> D5{Pydantic<br/>valid?}
-        D5 -- no, retry once --> D4
-    end
-    D5 -- yes --> E[Report card<br/>+ Missing fields]
-    E --> F[(SQLite)]
-```
-
-| Step | Where | Why |
-|---|---|---|
-| Speech to text | Browser (Web Speech API) | Free and live while the worker speaks |
-| Clean + hints | `backend/app/nlp.py` (spaCy) | Classic NLP finds places like "room 3", "2. Stock" and date words in both languages |
-| Real dates | `nlp.py` (dateparser) | LLMs are bad at calendar maths, so "Friday" / "morgen" become real dates *before* the LLM sees them |
-| Structuring | `backend/app/report_service.py` + `llm/` | The LLM fills a JSON schema made from the Pydantic model |
-| Validation | Pydantic | Wrong values (e.g. priority "Urgent") are rejected; the LLM gets one retry with the exact error |
-| Never guess | `models.py` | Optional fields stay `null` and are listed in `missing_fields` |
-
-### Example
+## Example
 
 > "Room 3 on the second floor, there's a **crock** in the wall next to the window. Needs to be fixed by Friday, high priority. Tell the plasterer."
 
@@ -60,12 +30,81 @@ flowchart LR
 
 The speech-to-text mistake "crock" is fixed to "crack", and "Friday" becomes a real date.
 
-## Evaluation
+## Architecture
 
-`backend/eval/` holds 10 sample notes (6 English, 4 German) with the expected fields. Run them through the real pipeline:
+A monorepo with two deployable apps:
+
+| App | Stack | Responsibility |
+|---|---|---|
+| `apps/web` | React 19, TypeScript, Vite | Recording, transcript editing, report review, saved list |
+| `apps/api` | Python, FastAPI, Pydantic, spaCy | NLP, LLM structuring, validation, persistence, rate limiting |
+
+### Request flow: generating a report
+
+```mermaid
+sequenceDiagram
+    participant W as Web app
+    participant R as Router<br/>/api/reports/generate
+    participant S as Report service
+    participant N as NLP (spaCy + dateparser)
+    participant L as LLM provider
+    W->>R: transcript, language
+    R->>R: rate limit (per IP / per day)
+    R->>S: generate_report()
+    S->>N: clean text, extract places, numbers, dates
+    N-->>S: hints ("Friday" → 2026-11-20)
+    S->>L: prompt + JSON schema (structured output)
+    L-->>S: JSON
+    S->>S: validate with Pydantic
+    alt invalid
+        S->>L: retry once with the validation error
+    end
+    S-->>R: Report (+ missing_fields)
+    R-->>W: 200 Report · 429 limit · 502 model error
+```
+
+### API layers (`apps/api/app`)
 
 ```
-cd backend && python -m eval.evaluate
+main.py          app factory, maps domain errors to HTTP (429, 502)
+api/             routers + dependencies (LLM, repository, rate limiter)
+core/            settings (pydantic-settings), domain errors, rate limiter
+services/        nlp.py (spaCy, dateparser) · report_service.py (prompt, validation, retry)
+llm/             LLMProvider protocol · factory · Claude · Ollama
+schemas/         Pydantic models: Report, requests, saved items
+db/              ReportRepository (SQLite)
+```
+
+Dependencies only point inwards: routers → services → schemas. Services don't know about HTTP, and the report service only sees the `LLMProvider` protocol, so providers can be swapped by configuration (`LLM_PROVIDER=claude|ollama`) and replaced by a fake in tests.
+
+### Web app (`apps/web/src`)
+
+```
+app/             App: composition only, no business logic
+features/
+  recording/     useSpeechRecognition (Web Speech API), RecordButton, TranscriptView, LanguageSwitch
+  reports/       useReports (generate, save, list state), ReportCard, PriorityBadge, ReportList, API calls, types
+  health/        API status line
+lib/             typed JSON HTTP client (ApiError), date formatting
+test/            test setup, fake speech recogniser, fake API
+```
+
+Each feature exposes a small public surface through its `index.ts`. State and side effects live in hooks (`useSpeechRecognition`, `useReports`), so components stay presentational.
+
+### Key decisions
+
+- **Dates are resolved before the LLM.** Calendar arithmetic ("Friday", "morgen") is done deterministically with dateparser; the model only places the resolved date.
+- **Structured output + validation + one retry.** The JSON schema is generated from the Pydantic model, and the API constrains the output to it. The result is still validated, and a single retry includes the exact validation error.
+- **Never guess.** Optional fields stay `null`. `missing_fields` is computed from the model, not produced by the LLM.
+- **One origin.** The web app calls `/api/*` on its own host (Vite proxy locally, Render rewrite in production), so no CORS configuration is needed.
+- **Cost protection.** The public demo is limited to 20 reports per hour per visitor and 200 per day overall.
+
+## Evaluation
+
+`apps/api/eval/` holds 10 sample notes (6 English, 4 German) with the expected fields. Run them through the real pipeline:
+
+```
+cd apps/api && python -m eval.evaluate
 ```
 
 Result with Claude Haiku 5.5:
@@ -82,37 +121,35 @@ Result with Claude Haiku 5.5:
 
 A guessed value where the worker said nothing counts as **wrong**. Remaining mistakes: "hallway" was left out of one location, and *Fliesenleger* (tiler) was reported as plasterer.
 
-## Tech stack
+## Quality
 
-- **Frontend:** React 19 + TypeScript, Vite, Vitest + Testing Library
-- **Backend:** Python, FastAPI, Pydantic, spaCy (`en_core_web_sm`, `de_core_news_sm`), dateparser, SQLite
-- **LLM:** Claude Haiku 5.5 with structured outputs (default), or Ollama (free, local) via `LLM_PROVIDER=ollama`
-- **CI:** GitHub Actions runs ESLint, Vitest, the build and pytest on every push
-- **Hosting:** Render (`render.yaml`), with the FastAPI web service and the React static site; `/api/*` is proxied to the backend. The public demo is rate-limited (20 reports per hour per visitor, 200 per day) to protect the API credit.
-
-The LLM sits behind a small interface (`llm/base.py`), so providers can be swapped without touching the rest of the app. All tests use a fake LLM: no API key and no cost.
+| | API | Web app |
+|---|---|---|
+| Tests | pytest (unit + API), LLM always faked | Vitest + Testing Library, speech and API faked |
+| Lint / format | ruff | ESLint, TypeScript strict |
+| CI | GitHub Actions on every push and pull request | GitHub Actions on every push and pull request |
 
 ## Run it locally
 
 Requirements: Python 3.11+, Node 20 (`nvm use`), Google Chrome (best speech recognition).
 
-**Backend**
+**API**
 
 ```
-cd backend
+cd apps/api
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 python -m spacy download en_core_web_sm
 python -m spacy download de_core_news_sm
 uvicorn app.main:app --reload
 ```
 
-Claude credentials: run `ant auth login` once, or set `ANTHROPIC_API_KEY` (see `.env.example`). Never commit a key.
+LLM credentials: run `ant auth login` once, or set `ANTHROPIC_API_KEY` (see `.env.example`). Never commit a key.
 
-**Frontend** (in a second terminal)
+**Web app** (second terminal)
 
 ```
-cd frontend
+cd apps/web
 nvm use
 npm install
 npm run dev
@@ -120,31 +157,18 @@ npm run dev
 
 Open http://localhost:5173 in Chrome and allow the microphone.
 
-**Tests**
+**Checks**
 
 ```
-cd backend && pytest
-cd frontend && npm test
+cd apps/api && ruff check . && pytest
+cd apps/web && npx eslint . && npm test
 ```
 
-## Project structure
+## Deployment
 
-```
-backend/app/
-  main.py            API routes
-  models.py          Report (Pydantic) + missing_fields
-  nlp.py             spaCy hints + date conversion
-  report_service.py  transcript → validated report (with retry)
-  llm/               base.py (interface), claude.py, ollama.py
-  db.py              SQLite storage
-backend/eval/        10 samples + accuracy script
-frontend/src/
-  components/        RecordButton, TranscriptView, ReportCard, ReportList
-  hooks/             useSpeechRecognition
-  services/api.ts    calls to the backend
-```
+`render.yaml` defines both services on Render: the API as a Python web service, and the web app as a static site that rewrites `/api/*` to the API. The LLM key is set in Render's dashboard, never in the repository.
 
-## Design decisions
+## Design decisions (UX)
 
 - **Tap to start / tap to stop** instead of hold, which is easier with work gloves. Big buttons and text, mobile first.
 - **The worker can edit the transcript** before generating, because speech recognition makes mistakes.
