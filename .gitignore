@@ -1,0 +1,15 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+*.db
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
